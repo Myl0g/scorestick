@@ -11,7 +11,7 @@ def mysql_check(check):
             cursor.execute(check['statement'])
             result = cursor.fetchall()
         connection.commit()
-        return result
+        return 0
     except Exception as e:
         return e
     

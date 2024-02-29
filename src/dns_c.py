@@ -1,11 +1,16 @@
-import dns
-from dns import resolver
+import dns.resolver
 
 def dns_check(check):
     try:
-        r = resolver.Resolver(configure=False)
+        r = dns.resolver.Resolver(configure=False)
         r.nameservers = [check['host']]
-        return r.resolve(check['name'], 'A')
+        result = r.resolve(check['name'], 'A')
+        for ip in result:
+            if check['ip'] in ip.to_text():
+                return 0
+            else:
+                return 'wrong ip'
+                
     except Exception as e:
         return e
 

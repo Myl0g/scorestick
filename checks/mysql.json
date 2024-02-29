@@ -4,5 +4,5 @@
   "host": "192.168.151.98",
   "username": "root",
   "password": "root",
-  "stattement": "select user,host from mysql.user"
+  "statement": "select user,host from mysql.user"
 }
