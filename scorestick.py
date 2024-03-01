@@ -12,6 +12,8 @@ from src.winrm_c import winrm_check
 from src.mysql_c import mysql_check
 from src.http_c import http_check
 from src.dns_c import dns_check
+from src.ftp_c import ftp_check
+from src.smb_c import smb_check
 
 out_directory = 'out/'
 def host_server(http_port):
@@ -149,6 +151,10 @@ class scoreboard_app(App):
             return dns_check(check)
         elif check_type == 'http':
             return http_check(check)
+        elif check_type == 'ftp':
+            return ftp_check(check)
+        elif check_type == 'smb':
+            return smb_check(check)
         else:
             return 'check error'
     

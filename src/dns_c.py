@@ -18,7 +18,7 @@ def dns_check(check):
             if check['ip'] in ip.to_text():
                 return 0
             else:
-                return 'wrong ip'
+                return 'wrong ip: ' + ip.to_text()
     except Exception as e:
         return e
 

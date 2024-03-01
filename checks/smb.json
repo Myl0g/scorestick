@@ -1,0 +1,9 @@
+{ 
+  "display_name": "smb",
+  "service": "smb",
+  "host": "192.168.151.98",
+  "username": "ccdc",
+  "password": "Password123!@#",
+  "file": "share\\catboy.png",
+  "md5": "66C2DCA3C6EE7760DCB98A3F31259D22"
+}
