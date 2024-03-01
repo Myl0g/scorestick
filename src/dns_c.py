@@ -1,6 +1,15 @@
 import dns.resolver
 
+def check_valid(check):
+    required_keys = ['display_name', 'service', 'host', 'name', 'ip']
+    for key in required_keys:
+        if key not in check or check[key] == '':
+            return False
+    return True
+
 def dns_check(check):
+    if not check_valid(check):
+        return 'check error'
     try:
         r = dns.resolver.Resolver(configure=False)
         r.nameservers = [check['host']]
@@ -10,7 +19,6 @@ def dns_check(check):
                 return 0
             else:
                 return 'wrong ip'
-                
     except Exception as e:
         return e
 

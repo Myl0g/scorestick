@@ -1,2 +1,2 @@
 def http_check(check):
-    return 1
+    return 'check error'

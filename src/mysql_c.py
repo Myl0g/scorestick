@@ -1,6 +1,15 @@
 import pymysql
 
+def check_valid(check):
+    required_keys = ['display_name', 'service', 'host', 'username', 'password', 'statement']
+    for key in required_keys:
+        if key not in check or check[key] == '':
+            return False
+    return True
+
 def mysql_check(check):
+    if not check_valid(check):
+        return 'check error'
     try:
         connection = pymysql.connect(
             host=check['host'],
