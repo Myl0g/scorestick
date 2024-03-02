@@ -1,0 +1,114 @@
+---
+- name: Put every service on an (APT/DNF based) Linux box
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    packages:
+      Debian:
+        ssh: openssh-server
+        ldap: slapd
+        postgresql: postgresql
+        mysql: default-mysql-server
+        apache: apache2
+        nginx: nginx
+        ftp: vsftpd
+        smb: samba
+      RedHat:
+        ssh: openssh-server
+        ldap: openldap-servers
+        postgresql: postgresql-server
+        mysql: mariadb-server
+        apache: httpd
+        nginx: nginx
+        ftp: vsftpd
+        smb: samba
+
+    service_names:
+      Debian:
+        apache: apache2
+        smb: smbd
+      RedHat:
+        apache: httpd
+        smb: smb
+
+  pre_tasks:
+    - name: Determine package names based on distribution
+      ansible.builtin.set_fact:
+        package_list: "{{ packages[ansible_os_family] }}"
+        service_list: "{{ service_names[ansible_os_family] | default({}) }}"
+
+  tasks:
+    - name: Install services
+      ansible.builtin.package:
+        name: "{{ package_list[item] }}"
+        state: present
+      loop: "{{ package_list.keys() }}"
+
+    - name: Create SSL dir for Nginx (if not already present)
+      ansible.builtin.file:
+        state: directory
+        path: /etc/nginx/ssl
+        mode: '0755'
+
+    - name: Create Nginx's Self-Signed Certificate
+      community.crypto.x509_certificate:
+        path: /etc/nginx/ssl/nginx.crt
+        privatekey_path: /etc/nginx/ssl/nginx.key
+        state: present
+        provider: selfsigned
+
+    - name: Remove default configuration from Nginx
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Remove all port-80 listeners from Nginx
+      ansible.builtin.lineinfile:
+        path: "{{ item }}"
+        regexp: '^\s*listen\s+80;'
+        state: absent
+      with_fileglob:
+        - "/etc/nginx/sites-enabled/*"
+
+    - name: Add HTTPS/port-443 configuration to Nginx
+      ansible.builtin.copy:
+        dest: /etc/nginx/sites-available/default_https
+        owner: root
+        group: root
+        mode: "u=rw,g=rw,o=r"
+        content: |
+          server {
+              listen 443 ssl;
+              server_name _;
+
+              ssl_certificate /etc/nginx/ssl/nginx.crt;
+              ssl_certificate_key /etc/nginx/ssl/nginx.key;
+
+              location / {
+                root /var/www/html;
+                index index.html index.htm;
+              }
+            }
+
+    - name: Enable new Nginx configuration
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/default_https
+        dest: /etc/nginx/sites-enabled/default_https
+        state: link
+
+    - name: Enable and start services (general)
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop: "{{ package_list.keys() }}"
+      when: item not in service_list.keys()
+
+    - name: Enable and start services (special cases)
+      ansible.builtin.service:
+        name: "{{ service_list[item] }}"
+        state: started
+        enabled: true
+      loop: "{{ service_list.keys() }}"
