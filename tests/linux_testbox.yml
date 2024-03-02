@@ -43,23 +43,33 @@
     - name: Update package manager cache (Debian)
       ansible.builtin.apt:
         update_cache: true
+      tags: install_packages
       when: ansible_os_family == "Debian"
     - name: Update package manager cache (RHEL)
       ansible.builtin.dnf:
         update_cache: true
       when: ansible_os_family == "RedHat"
+      tags: install_packages
 
     - name: Install services
       ansible.builtin.package:
         name: "{{ package_list[item] }}"
         state: present
       loop: "{{ package_list.keys() }}"
+      tags: install_packages
 
     - name: Create SSL dir for Nginx (if not already present)
       ansible.builtin.file:
         state: directory
         path: /etc/nginx/ssl
         mode: '0755'
+      tags: nginx_config
+
+    - name: Create Nginx's Self-Signed Private Key
+      community.crypto.openssl_privatekey:
+        path: /etc/nginx/ssl/nginx.key
+        state: present
+      tags: nginx_config
 
     - name: Create Nginx's Self-Signed Certificate
       community.crypto.x509_certificate:
@@ -67,11 +77,13 @@
         privatekey_path: /etc/nginx/ssl/nginx.key
         state: present
         provider: selfsigned
+      tags: nginx_config
 
     - name: Remove default configuration from Nginx
       ansible.builtin.file:
         path: /etc/nginx/sites-enabled/default
         state: absent
+      tags: nginx_config
 
     - name: Remove all port-80 listeners from Nginx
       ansible.builtin.lineinfile:
@@ -80,6 +92,7 @@
         state: absent
       with_fileglob:
         - "/etc/nginx/sites-enabled/*"
+      tags: nginx_config
 
     - name: Add HTTPS/port-443 configuration to Nginx
       ansible.builtin.copy:
@@ -100,12 +113,14 @@
                 index index.html index.htm;
               }
             }
+      tags: nginx_config
 
     - name: Enable new Nginx configuration
       ansible.builtin.file:
         src: /etc/nginx/sites-available/default_https
         dest: /etc/nginx/sites-enabled/default_https
         state: link
+      tags: nginx_config
 
     - name: Enable and start services (general)
       ansible.builtin.service:
@@ -114,6 +129,7 @@
         enabled: true
       loop: "{{ package_list.keys() }}"
       when: item not in service_list.keys()
+      tags: services_online
 
     - name: Enable and start services (special cases)
       ansible.builtin.service:
@@ -121,3 +137,4 @@
         state: started
         enabled: true
       loop: "{{ service_list.keys() }}"
+      tags: services_online
