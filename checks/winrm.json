@@ -3,6 +3,6 @@
   "service": "winrm",
   "host": "192.168.151.98",
   "username": "ccdc",
-  "password": "Password123!@#",
+  "password": "Password123!@#$",
   "command": "whoami & dir"
 }

@@ -16,7 +16,7 @@ def smb_check(check):
         smbclient.register_session(check['host'], username=check['username'], password=check['password'])
         with smbclient.open_file(url, mode='rb') as f:
             md5 = hashlib.md5(f.read()).hexdigest()
-            if md5 == check['md5']:
+            if md5.upper() == check['md5'].upper():
                 return 0
             else:
                 return 'failed content check'

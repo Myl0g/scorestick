@@ -36,16 +36,28 @@ class scoreboard_app(App):
         Binding('tab', 'focus_next', 'Focus Next'),
     ]
 
-    def __init__(self, seconds=5, history=20, check_directory='checks/', http_port=1337, web=True, verbose=True, *args, **kwargs):
+    def __init__(
+            self, 
+            check_timer_seconds=5, 
+            check_history=20, 
+            check_directory='checks/', 
+            http_port=1337, 
+            host_web_server=True, 
+            verbose_failures=True,
+            display_name_limit=15, 
+            *args, 
+            **kwargs
+            ):
         self.results = []
-        self.seconds = seconds
-        self.history = history
+        self.seconds = check_timer_seconds
+        self.history = check_history
         self.directory = check_directory
         self.out_directory = out_directory
-        self.verbose = verbose
+        self.verbose = verbose_failures
+        self.name_length = display_name_limit
         if not os.path.exists(self.out_directory):
             os.mkdir(self.out_directory)
-        if web:
+        if host_web_server:
             self.process = multiprocessing.Process(target=host_server, args=(http_port,))
             self.process.start()
         super().__init__(*args, **kwargs)
@@ -80,6 +92,7 @@ class scoreboard_app(App):
     def on_mount(self):
         t = self.query_one(DataTable)
         t.cursor_type = None
+        # t.zebra_stripes = True
         self.update_table()
         self.set_interval(self.seconds, callback=self.update_table)
 
@@ -88,7 +101,7 @@ class scoreboard_app(App):
         t.clear(columns=True)
         names = [Text('Time', justify='center')]
         for check in self.get_checks():
-            names.append(Text(check['display_name'], justify='center'))
+            names.append(Text(check['display_name'][:self.name_length], justify='center'))
         t.add_columns(*names)
         self.update_results()
         self.results.reverse()
@@ -129,12 +142,12 @@ class scoreboard_app(App):
             if (self.verbose):
                 f.write(str(result) + '\n' + json2html.json2html.convert(json=json.dumps(check)))
             else:
-                sneaky = {
+                non_verbose_output = {
                     'display_name': check['display_name'],
                     'service': check['service'],
                     'host': check['host']
                 }
-                f.write(str(result) + '\n' + json2html.json2html.convert(json=json.dumps(sneaky)))
+                f.write(str(result) + '\n' + json2html.json2html.convert(json=json.dumps(non_verbose_output)))
             f.close
 
     def process_check(self, check):

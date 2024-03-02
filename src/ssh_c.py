@@ -13,7 +13,7 @@ def ssh_check(check):
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(check['host'], username=check['username'], password=check['password'])
+        ssh.connect(check['host'], username=check['username'], password=check['password'], banner_timeout=200)
         stdin, stdout, stderr = ssh.exec_command(check['command'])
         return 0
     except Exception as e:

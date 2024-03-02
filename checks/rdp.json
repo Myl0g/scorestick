@@ -2,6 +2,6 @@
   "display_name": "rdp",
   "service": "rdp",
   "host": "192.168.151.98",
-  "username": "galactic\\ccdc",
-  "password": "Password123!@#"
+  "username": "ccdc",
+  "password": "Password123!@#$"
 }
