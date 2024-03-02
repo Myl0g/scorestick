@@ -125,7 +125,7 @@
     - name: Enable and start services (general)
       ansible.builtin.service:
         name: "{{ item }}"
-        state: started
+        state: restarted
         enabled: true
       loop: "{{ package_list.keys() }}"
       when: item not in service_list.keys()
@@ -134,7 +134,7 @@
     - name: Enable and start services (special cases)
       ansible.builtin.service:
         name: "{{ service_list[item] }}"
-        state: started
+        state: restarted
         enabled: true
       loop: "{{ service_list.keys() }}"
       tags: services_online
