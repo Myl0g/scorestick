@@ -41,6 +41,20 @@
       tags: always
 
   tasks:
+    - name: Ensure existence of ccdc:ccdc user
+      ansible.builtin.user:
+        name: ccdc
+        password: "$1$cWbBYKiF$eFGx65B0FrkHFtup6jw45." # ccdc
+      tags: create_user
+
+    - name: Ensure ccdc user can get root
+      ansible.builtin.lineinfile:
+        line: 'ccdc	ALL=(ALL) 	ALL'
+        state: present
+        validate: '/usr/sbin/visudo -cf %s'
+        path: /etc/sudoers
+      tags: create_user
+
     - name: Update package manager cache (Debian)
       ansible.builtin.apt:
         update_cache: true
