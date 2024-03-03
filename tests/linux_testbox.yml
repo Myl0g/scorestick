@@ -29,10 +29,14 @@
       Debian:
         apache: apache2
         smb: smbd
+        ftp: vsftpd
+        ldap: slapd
       RedHat:
         apache: httpd
         smb: smb
         mysql: mariadb
+        ftp: vsftpd
+        ldap: slapd
 
     configuration_files:
       Debian:
@@ -230,6 +234,7 @@
     - name: On Rocky, initialize the DB
       ansible.builtin.command: /usr/bin/postgresql-setup --initdb
       changed_when: false
+      failed_when: false
       when: ansible_distribution == "Rocky"
       tags: postgres_config
 
