@@ -136,24 +136,42 @@
             }
       tags: nginx_config
 
-    - name: Force PSQL to listen externally (Debian)
-      ansible.builtin.lineinfile:
-        line: "listen_addresses = '*'"
-        path: /etc/postgresql/*/postgresql.conf
+    - name: Get location of postgresql.conf
+      ansible.builtin.find:
+        path: /etc
+        patterns: 'postgresql.conf'
+        file_type: file
+        recurse: true
+      register: postgresql_conf_loc
       tags: postgres_config
-      when: ansible_os_family == "Debian"
 
-    - name: Force PSQL to listen externally (RHEL)
+    - name: Get location of pg_hba.conf
+      ansible.builtin.find:
+        path: /etc
+        patterns: 'pg_hba.conf'
+        file_type: file
+        recurse: true
+      register: pg_hba_conf_loc
+      tags: postgres_config
+
+    - name: Force PSQL to listen externally
       ansible.builtin.lineinfile:
         line: "listen_addresses = '*'"
-        path: /etc/postgresql/*/postgresql.conf
+        path: "{{ item.path }}"
+      loop: "{{ postgresql_conf_loc.files }}"
       tags: postgres_config
-      when: ansible_os_family == "RedHat"
 
     - name: Force PSQL to accept all conns on 5432
       ansible.builtin.lineinfile:
         line: "host all all 0.0.0.0/0 md5"
-        path: "{{ postgres_conf_dir }}/pg_hba.conf"
+        path: "{{ item.path }}"
+      loop: "{{ pg_hba_conf_loc.files }}"
+      tags: postgres_config
+
+    - name: On Rocky, initialize the DB
+      ansible.builtin.command: /usr/bin/postgresql-setup --initdb
+      changed_when: false
+      when: ansible_distribution == "Rocky"
       tags: postgres_config
 
     - name: Enable and start services (general)
