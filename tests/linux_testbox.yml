@@ -92,11 +92,13 @@
         state: absent
       with_fileglob:
         - "/etc/nginx/sites-enabled/*"
+        - "/etc/nginx/conf.d/*"
+        - "/etc/nginx/nginx.conf"
       tags: nginx_config
 
     - name: Add HTTPS/port-443 configuration to Nginx
       ansible.builtin.copy:
-        dest: /etc/nginx/sites-available/default_https
+        dest: /etc/nginx/conf.d/https.conf
         owner: root
         group: root
         mode: "u=rw,g=rw,o=r"
@@ -115,12 +117,25 @@
             }
       tags: nginx_config
 
-    - name: Enable new Nginx configuration
-      ansible.builtin.file:
-        src: /etc/nginx/sites-available/default_https
-        dest: /etc/nginx/sites-enabled/default_https
-        state: link
-      tags: nginx_config
+    - name: Force PSQL to listen externally (Debian)
+      ansible.builtin.lineinfile:
+        line: "listen_addresses = '*'"
+        path: /etc/postgresql/*/postgresql.conf
+      tags: postgres_config
+      when: ansible_os_family == "Debian"
+
+    - name: Force PSQL to listen externally (RHEL)
+      ansible.builtin.lineinfile:
+        line: "listen_addresses = '*'"
+        path: /etc/postgresql/*/postgresql.conf
+      tags: postgres_config
+      when: ansible_os_family == "RedHat"
+
+    - name: Force PSQL to accept all conns on 5432
+      ansible.builtin.lineinfile:
+        line: "host all all 0.0.0.0/0 md5"
+        path: "{{ postgres_conf_dir }}/pg_hba.conf"
+      tags: postgres_config
 
     - name: Enable and start services (general)
       ansible.builtin.service:
