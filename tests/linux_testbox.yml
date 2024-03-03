@@ -77,6 +77,20 @@
       loop: "{{ package_list.keys() }}"
       tags: install_packages
 
+    - name: Remove Cloud Init SSH configurations
+      ansible.builtin.lineinfile:
+        line: "Include /etc/ssh/sshd_config.d/*.conf"
+        state: absent
+        path: /etc/ssh/sshd_config
+      tags: sshd_config
+
+    - name: Guarantee password authentication
+      ansible.builtin.lineinfile:
+        line: "PasswordAuthentication yes"
+        state: present
+        path: /etc/ssh/sshd_config
+      tags: sshd_config
+
     - name: Create SSL dir for Nginx (if not already present)
       ansible.builtin.file:
         state: directory
