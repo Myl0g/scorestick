@@ -259,6 +259,14 @@
         path: /etc/samba/smb.conf
       tags: smb_config
 
+    - name: Add CCDC user to Samba
+      ansible.builtin.shell:
+        cmd: |
+         set -o pipefail
+         echo -e "ccdc\nccdc" | smbpasswd -a ccdc
+      changed_when: false
+      tags: smb_config
+
     - name: Enable and (re)start services (general)
       ansible.builtin.service:
         name: "{{ item }}"
