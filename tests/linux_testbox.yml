@@ -106,6 +106,13 @@
         path: /etc/ssh/sshd_config
       tags: sshd_config
 
+    - name: Remove bans on password authentication
+      ansible.builtin.lineinfile:
+        line: "PasswordAuthentication no"
+        state: absent
+        path: /etc/ssh/sshd_config
+      tags: sshd_config
+
     - name: Create SSL dir for Nginx (if not already present)
       ansible.builtin.file:
         state: directory
