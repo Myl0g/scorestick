@@ -38,6 +38,7 @@
       ansible.builtin.set_fact:
         package_list: "{{ packages[ansible_os_family] }}"
         service_list: "{{ service_names[ansible_os_family] | default({}) }}"
+      tags: always
 
   tasks:
     - name: Update package manager cache (Debian)
@@ -188,7 +189,7 @@
       when: ansible_distribution == "Rocky"
       tags: postgres_config
 
-    - name: Enable and start services (general)
+    - name: Enable and (re)start services (general)
       ansible.builtin.service:
         name: "{{ item }}"
         state: restarted
