@@ -51,6 +51,25 @@
       when: ansible_os_family == "RedHat"
       tags: install_packages
 
+    - name: On Rocky, enable extra repos for LDAP
+      community.general.dnf_config_manager:
+        name: plus
+        state: enabled
+      when: ansible_distribution == "Rocky"
+      tags: install_packages
+
+    - name: Clean Rocky dnf repos up
+      ansible.builtin.command: dnf clean all
+      changed_when: false
+      when: ansible_distribution == "Rocky"
+      tags: install_packages
+
+    - name: Re-update Rocky repos
+      ansible.builtin.dnf:
+        update_cache: true
+      when: ansible_distribution == "Rocky"
+      tags: install_packages
+
     - name: Install services
       ansible.builtin.package:
         name: "{{ package_list[item] }}"
