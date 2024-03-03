@@ -66,6 +66,16 @@
         path: /etc/sudoers
       tags: create_user
 
+    - name: Put a test file in /home/ccdc
+      ansible.builtin.copy:
+        dest: /home/ccdc/test.txt
+        owner: ccdc
+        group: ccdc
+        mode: 'u=rw,g=rw,o=r'
+        content: |
+          This is a test message. 12345. hoi my name tem
+      tags: create_user
+
     - name: Update package manager cache (Debian)
       ansible.builtin.apt:
         update_cache: true
