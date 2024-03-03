@@ -32,6 +32,13 @@
       RedHat:
         apache: httpd
         smb: smb
+        mysql: mariadb
+
+    configuration_files:
+      Debian:
+        mysql: /etc/mysql/mysql.conf.d/mysqld.cnf
+      RedHat:
+        mysql: /etc/my.cnf.d/mariadb-server.cnf
 
   pre_tasks:
     - name: Determine package names based on distribution
@@ -204,6 +211,22 @@
       loop: "{{ pg_hba_conf_loc.files }}"
       tags: postgres_config
 
+    - name: Bind MySQL on 0.0.0.0 (Debian)
+      ansible.builtin.lineinfile:
+        line: "bind-address=0.0.0.0"
+        path: "{{ configuration_files.Debian.mysql }}"
+        state: present
+      when: ansible_os_family == "Debian"
+      tags: mysql_config
+
+    - name: Bind MySQL on 0.0.0.0 (RedHat)
+      ansible.builtin.lineinfile:
+        line: "bind-address=0.0.0.0"
+        path: "{{ configuration_files.RedHat.mysql }}"
+        state: present
+      when: ansible_os_family == "RedHat"
+      tags: mysql_config
+
     - name: On Rocky, initialize the DB
       ansible.builtin.command: /usr/bin/postgresql-setup --initdb
       changed_when: false
@@ -218,6 +241,7 @@
       loop: "{{ package_list.keys() }}"
       when: item not in service_list.keys()
       tags: services_online
+      failed_when: false
 
     - name: Enable and start services (special cases)
       ansible.builtin.service:
